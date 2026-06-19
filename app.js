@@ -1,13 +1,58 @@
 // 路由：#/ → 年级；#/g/{grade} → 章节；#/q/{chapterId} → 答题
 const app = document.getElementById('app');
 
+// ----- localStorage 存档 -----
+const STORAGE_KEY = 'dundunmath:v1';
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { progress: {}, best: {} };
+    const obj = JSON.parse(raw);
+    return { progress: obj.progress || {}, best: obj.best || {} };
+  } catch {
+    return { progress: {}, best: {} };
+  }
+}
+function saveStore(store) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
+}
+const store = loadStore();
+
+function saveProgress() {
+  if (!state.chapter) return;
+  store.progress[state.chapter.id] = {
+    problems: state.problems,
+    index: state.index,
+    correct: state.correct,
+    wrong: state.wrong,
+    history: state.history,
+    gradeName: state.gradeName,
+    savedAt: Date.now(),
+  };
+  saveStore(store);
+}
+function clearProgress(chapterId) {
+  delete store.progress[chapterId];
+  saveStore(store);
+}
+function recordBest(chapterId, score) {
+  const prev = store.best[chapterId] || 0;
+  if (score > prev) {
+    store.best[chapterId] = score;
+    saveStore(store);
+  }
+}
+
+// ----- 状态 -----
 const state = {
   problems: null,
   index: 0,
   correct: 0,
   wrong: 0,
   chapter: null,
-  history: [], // {q, userAnswer, correct, expected}
+  history: [],
+  gradeName: '',
 };
 
 function h(tag, props = {}, ...children) {
@@ -26,7 +71,6 @@ function h(tag, props = {}, ...children) {
 }
 
 function clear() { app.innerHTML = ''; }
-
 function go(hash) { location.hash = hash; }
 
 const GRADE_EMOJI = ['🐣', '🐤', '🐰', '🦊', '🐯', '🦁'];
@@ -37,11 +81,37 @@ function chapterEmoji(id) {
   return CHAPTER_EMOJI_POOL[h % CHAPTER_EMOJI_POOL.length];
 }
 
+// 找出最近一次有进度的章节（按 savedAt 降序）
+function latestUnfinished() {
+  const entries = Object.entries(store.progress);
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => (b[1].savedAt || 0) - (a[1].savedAt || 0));
+  for (const [id, p] of entries) {
+    if (p.problems && p.index < p.problems.length) {
+      const found = findChapter(id);
+      if (found) return { id, progress: p, ...found };
+    }
+  }
+  return null;
+}
+
 function renderHome() {
   clear();
+  const last = latestUnfinished();
+  const totalDone = Object.keys(store.best).length;
   app.appendChild(h('div', { class: 'page' },
     h('h1', { class: 'title' }, '🌈 小学数学乐园 ✨'),
     h('p', { class: 'subtitle' }, '选一个年级，开启你的闯关之旅吧～'),
+    last ? h('div', { class: 'resume-card', onclick: () => go(`#/q/${last.id}`) },
+      h('div', { class: 'resume-emoji' }, '⏯️'),
+      h('div', { class: 'resume-text' },
+        h('div', { class: 'resume-title' }, '继续上次的练习'),
+        h('div', { class: 'resume-sub' },
+          `${last.grade.name} · ${last.chapter.name} · 已答 ${last.progress.index} / ${last.progress.problems.length}`,
+        ),
+      ),
+      h('div', { class: 'resume-arrow' }, '→'),
+    ) : null,
     h('div', { class: 'grid' },
       ...CURRICULUM.map((g, i) => h('button', {
         class: `card grade-card g${i}`,
@@ -52,6 +122,15 @@ function renderHome() {
         h('div', { class: 'card-meta' }, `${g.chapters.length} 个章节`),
       )),
     ),
+    totalDone > 0 ? h('div', { class: 'home-footer' },
+      h('span', {}, `🏅 已挑战 ${totalDone} 个章节`),
+      h('button', { class: 'link-btn', onclick: () => {
+        if (confirm('确定要清空所有进度和成绩记录吗？')) {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+        }
+      } }, '清空记录'),
+    ) : null,
   ));
 }
 
@@ -64,14 +143,23 @@ function renderGrade(gradeIdx) {
     h('h1', { class: 'title' }, `${GRADE_EMOJI[gradeIdx] || '⭐'} ${grade.name}`),
     h('p', { class: 'subtitle' }, '点一个章节，开始挑战 100 道题！'),
     h('div', { class: 'grid' },
-      ...grade.chapters.map(c => h('button', {
-        class: 'card chapter-card',
-        onclick: () => go(`#/q/${c.id}`),
-      },
-        h('div', { class: 'card-emoji' }, chapterEmoji(c.id)),
-        h('div', { class: 'card-name' }, c.name),
-        h('div', { class: 'card-meta' }, '100 题'),
-      )),
+      ...grade.chapters.map(c => {
+        const best = store.best[c.id];
+        const prog = store.progress[c.id];
+        const inProgress = prog && prog.problems && prog.index < prog.problems.length;
+        const meta = inProgress
+          ? `▶ 已答 ${prog.index}/${prog.problems.length}`
+          : '100 题';
+        return h('button', {
+          class: 'card chapter-card' + (inProgress ? ' has-progress' : ''),
+          onclick: () => go(`#/q/${c.id}`),
+        },
+          best != null ? h('div', { class: 'best-badge' }, `🏅 ${best}分`) : null,
+          h('div', { class: 'card-emoji' }, chapterEmoji(c.id)),
+          h('div', { class: 'card-name' }, c.name),
+          h('div', { class: 'card-meta' }, meta),
+        );
+      }),
     ),
   ));
 }
@@ -87,6 +175,21 @@ function findChapter(id) {
 function startChapter(chapterId) {
   const found = findChapter(chapterId);
   if (!found) return go('#/');
+
+  // 有进度则恢复
+  const saved = store.progress[chapterId];
+  if (saved && saved.problems && saved.index < saved.problems.length) {
+    state.chapter = found.chapter;
+    state.gradeName = found.grade.name;
+    state.problems = saved.problems;
+    state.index = saved.index;
+    state.correct = saved.correct || 0;
+    state.wrong = saved.wrong || 0;
+    state.history = saved.history || [];
+    renderQuestion();
+    return;
+  }
+
   state.chapter = found.chapter;
   state.gradeName = found.grade.name;
   state.problems = generateProblems(found.chapter, 100);
@@ -94,6 +197,22 @@ function startChapter(chapterId) {
   state.correct = 0;
   state.wrong = 0;
   state.history = [];
+  saveProgress();
+  renderQuestion();
+}
+
+function restartChapter(chapterId) {
+  const found = findChapter(chapterId);
+  if (!found) return go('#/');
+  clearProgress(chapterId);
+  state.chapter = found.chapter;
+  state.gradeName = found.grade.name;
+  state.problems = generateProblems(found.chapter, 100);
+  state.index = 0;
+  state.correct = 0;
+  state.wrong = 0;
+  state.history = [];
+  saveProgress();
   renderQuestion();
 }
 
@@ -105,7 +224,6 @@ function checkAnswer(input, expected) {
   const a = normalizeAnswer(input);
   const e = normalizeAnswer(expected);
   if (a === e) return true;
-  // 数值答案：允许 0.5 == .5 == 0.50
   const na = Number(a), ne = Number(e);
   if (!Number.isNaN(na) && !Number.isNaN(ne)) {
     return Math.abs(na - ne) < 1e-6;
@@ -192,6 +310,7 @@ function renderQuestion() {
 
   function next() {
     state.index++;
+    saveProgress();
     renderQuestion();
   }
 
@@ -212,8 +331,10 @@ function renderQuestion() {
   app.appendChild(h('div', { class: 'page quiz' },
     h('div', { class: 'quiz-header' },
       h('button', { class: 'back', onclick: () => {
-        if (confirm('要离开吗？这一章的进度会丢失哦～')) go(`#/`);
-      } }, '← 退出'),
+        // 自动保存进度，无需确认
+        saveProgress();
+        go(`#/`);
+      } }, '← 退出（自动保存）'),
       h('div', { class: 'quiz-title' }, `${state.gradeName} · ${state.chapter.name}`),
     ),
     h('div', { class: 'progress' },
@@ -235,6 +356,14 @@ function renderResult() {
   clear();
   const total = state.problems.length;
   const score = Math.round((state.correct / total) * 100);
+
+  // 完成 → 记录最高分，清空进度
+  recordBest(state.chapter.id, score);
+  clearProgress(state.chapter.id);
+
+  const best = store.best[state.chapter.id];
+  const isNewBest = score === best;
+
   let comment = '';
   let emoji = '';
   if (score === 100)      { emoji = '🏆'; comment = '太厉害啦！全对！'; }
@@ -254,6 +383,7 @@ function renderResult() {
         `共 ${total} 题　·　答对 ${state.correct}　·　答错 ${state.wrong}`,
       ),
       h('div', { class: 'score-comment' }, comment),
+      isNewBest && score > 0 ? h('div', { class: 'new-best' }, '🎖️ 新纪录！') : null,
     ),
     wrongList.length > 0 ? h('details', { class: 'wrong-list' },
       h('summary', {}, `📒 看看错题（${wrongList.length}）`),
@@ -263,7 +393,7 @@ function renderResult() {
       )),
     ) : null,
     h('div', { class: 'actions' },
-      h('button', { class: 'btn-primary', onclick: () => startChapter(state.chapter.id) }, '🔄 再来一次'),
+      h('button', { class: 'btn-primary', onclick: () => restartChapter(state.chapter.id) }, '🔄 再来一次'),
       h('button', { class: 'btn-secondary', onclick: () => go('#/') }, '🏠 回到首页'),
     ),
   ));
