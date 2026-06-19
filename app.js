@@ -159,7 +159,10 @@ function renderQuestion() {
   let choicesContainer = null;
 
   if (useChoices) {
-    choicesContainer = h('div', { class: 'choices' },
+    const isJudge = p.choices.length === 2 && p.choices.every(c => c === '对' || c === '错');
+    const isLong = p.choices.some(c => String(c).length >= 6);
+    const cls = 'choices' + (isJudge ? ' judge' : '') + (isLong ? ' long' : '');
+    choicesContainer = h('div', { class: cls },
       ...p.choices.map(c => h('button', {
         class: 'choice',
         'data-value': String(c),

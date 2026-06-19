@@ -224,6 +224,7 @@ body::after  { content: '🎈'; bottom: 12%; right: 8%; animation-delay: 2s; }
   text-align: center;
   margin-bottom: 24px;
   word-break: break-word;
+  white-space: pre-wrap;
   color: var(--text);
   position: relative;
   box-shadow: 0 8px 24px rgba(199, 155, 255, 0.18);
@@ -266,9 +267,18 @@ body::after  { content: '🎈'; bottom: 12%; right: 8%; animation-delay: 2s; }
   gap: 14px;
   margin-bottom: 16px;
 }
+.choices.judge {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.choices.long {
+  grid-template-columns: 1fr;
+}
 .choice {
   padding: 18px;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   background: #fff;
   border: 3px solid #ffd9ec;
@@ -278,6 +288,8 @@ body::after  { content: '🎈'; bottom: 12%; right: 8%; animation-delay: 2s; }
   color: var(--text);
   transition: transform 0.12s, border-color 0.15s, background 0.15s;
   box-shadow: 0 4px 0 #ffd9ec;
+  white-space: normal;
+  line-height: 1.4;
 }
 .choice:hover:not(:disabled) {
   transform: translateY(-2px);
