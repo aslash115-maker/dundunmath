@@ -187,15 +187,16 @@ function renderGrade(gradeIdx) {
   app.appendChild(h('div', { class: 'page' },
     h('button', { class: 'back', onclick: () => go('#/') }, '← 回到年级'),
     h('h1', { class: 'title' }, `${GRADE_EMOJI[gradeIdx] || '⭐'} ${grade.name}`),
-    h('p', { class: 'subtitle' }, '点一个章节，开始挑战 100 道题！'),
+    h('p', { class: 'subtitle' }, '点一个章节开始挑战！'),
     h('div', { class: 'grid' },
       ...grade.chapters.map(c => {
         const best = store.best[c.id];
         const prog = store.progress[c.id];
         const inProgress = prog && prog.problems && prog.index < prog.problems.length;
+        const totalQ = c.maxCount || 100;
         const meta = inProgress
           ? `▶ 已答 ${prog.index}/${prog.problems.length}`
-          : '100 题';
+          : `${totalQ} 题`;
         const card = h('button', {
           class: 'card chapter-card' + (inProgress ? ' has-progress' : ''),
           onclick: () => go(`#/q/${c.id}`),
@@ -250,7 +251,7 @@ function startChapter(chapterId) {
 
   state.chapter = found.chapter;
   state.gradeName = found.grade.name;
-  state.problems = generateProblems(found.chapter, 100);
+  state.problems = generateProblems(found.chapter, found.chapter.maxCount || 100);
   state.index = 0;
   state.correct = 0;
   state.wrong = 0;
@@ -265,7 +266,7 @@ function restartChapter(chapterId) {
   clearProgress(chapterId);
   state.chapter = found.chapter;
   state.gradeName = found.grade.name;
-  state.problems = generateProblems(found.chapter, 100);
+  state.problems = generateProblems(found.chapter, found.chapter.maxCount || 100);
   state.index = 0;
   state.correct = 0;
   state.wrong = 0;
@@ -411,6 +412,7 @@ function renderQuestion() {
     h('div', { class: 'progress-text', html:
       `第 <b>${i + 1}</b> / ${total} 题　·　<span class="stat-ok">✓ ${state.correct}</span>　·　<span class="stat-bad">✗ ${state.wrong}</span>`,
     }),
+    p.figure ? h('div', { class: 'figure', html: p.figure }) : null,
     h('div', { class: 'question' }, p.question),
     useChoices ? choicesContainer : h('div', { class: 'input-row' }, inputEl, submitBtn),
     feedbackEl,

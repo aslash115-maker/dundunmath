@@ -225,6 +225,12 @@ const grade1 = {
         return mc('下面哪个数比 50 大、比 60 小？', '57', ['49', '60', '62']);
       },
     },
+    {
+      id: 'g1-c7',
+      name: '趣味数学 🎩',
+      maxCount: 12,
+      generate: () => makeFunMath(),
+    },
   ],
 };
 
@@ -1110,23 +1116,338 @@ const grade6 = {
         return mc('一千万 = 多少？', '10,000,000', ['1,000,000', '100,000,000', '1,000,000,000']);
       },
     },
+    {
+      id: 'g6-c7',
+      name: '趣味数学 🎩',
+      maxCount: 12,
+      generate: () => makeFunMath(),
+    },
   ],
 };
+
+// ============== 趣味数学（带动画 SVG） ==============
+const FUN_TOPICS = [
+  // 1. 莫比乌斯环
+  {
+    figure: () => `
+<svg viewBox="0 0 240 140" width="280" height="160" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mobiusG" x1="0" x2="1">
+      <stop offset="0%" stop-color="#ff7eb9"/>
+      <stop offset="50%" stop-color="#ffd86b"/>
+      <stop offset="100%" stop-color="#7be3c7"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(120 70)">
+    <path d="M -80 0 C -80 -50 -30 -55 0 -25 C 30 -55 80 -50 80 0 C 80 50 30 55 0 25 C -30 55 -80 50 -80 0 Z"
+          fill="none" stroke="url(#mobiusG)" stroke-width="14" stroke-linecap="round"/>
+    <circle r="4" fill="#ff5ca0">
+      <animateMotion dur="3s" repeatCount="indefinite"
+        path="M -80 0 C -80 -50 -30 -55 0 -25 C 30 -55 80 -50 80 0 C 80 50 30 55 0 25 C -30 55 -80 50 -80 0 Z"/>
+    </circle>
+  </g>
+</svg>`,
+    question: '莫比乌斯环 (Möbius strip) 有几个面？',
+    answer: '只有 1 个面',
+    distractors: ['2 个面', '3 个面', '0 个面'],
+  },
+  // 2. 彭罗斯三角
+  {
+    figure: () => `
+<svg viewBox="0 0 200 180" width="200" height="180" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(100 100)">
+    <animateTransform attributeName="transform" type="rotate"
+      from="0 0 0" to="360 0 0" dur="20s" repeatCount="indefinite" additive="sum"/>
+    <g transform="translate(-100 -100)">
+      <polygon points="100,20 180,160 20,160" fill="none" stroke="#ff7eb9" stroke-width="3"/>
+      <polygon points="100,40 165,150 35,150" fill="none" stroke="#ffb86b" stroke-width="3"/>
+      <polygon points="100,55 153,142 47,142" fill="none" stroke="#7be3c7" stroke-width="3"/>
+      <line x1="100" y1="20" x2="100" y2="55" stroke="#ff7eb9" stroke-width="3"/>
+      <line x1="180" y1="160" x2="153" y2="142" stroke="#ffb86b" stroke-width="3"/>
+      <line x1="20" y1="160" x2="47" y2="142" stroke="#7be3c7" stroke-width="3"/>
+    </g>
+  </g>
+</svg>`,
+    question: '彭罗斯三角 (Penrose triangle) 是一种？',
+    answer: '不可能在三维世界中存在的图形',
+    distractors: ['普通的等边三角形', '可以折成立方体的纸样', '会发光的图形'],
+  },
+  // 3. 斐波那契螺线
+  {
+    figure: () => `
+<svg viewBox="0 0 260 180" width="280" height="200" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#ff7eb9" stroke-width="2.5">
+    <rect x="100" y="80" width="20" height="20" stroke="#ff7eb9"/>
+    <rect x="100" y="60" width="20" height="20" stroke="#ffb86b"/>
+    <rect x="120" y="60" width="40" height="40" stroke="#ffd86b"/>
+    <rect x="40"  y="60" width="60" height="60" stroke="#7be3c7"/>
+    <rect x="40"  y="120" width="100" height="100" stroke="#8ec5ff"/>
+  </g>
+  <path d="M 120 100 A 20 20 0 0 1 100 80
+           M 100 80 A 20 20 0 0 1 120 60
+           M 120 60 A 40 40 0 0 1 160 100
+           M 160 100 A 60 60 0 0 1 100 160
+           M 100 160 A 100 100 0 0 1 0 60"
+        fill="none" stroke="#c79bff" stroke-width="3" stroke-linecap="round"
+        stroke-dasharray="600" stroke-dashoffset="600">
+    <animate attributeName="stroke-dashoffset" from="600" to="0" dur="3s" repeatCount="indefinite"/>
+  </path>
+</svg>`,
+    question: '斐波那契螺线（黄金螺线）经常出现在哪里？',
+    answer: '向日葵种子、鹦鹉螺壳、银河系',
+    distractors: ['只在数学课本上', '只在电视屏幕上', '只在计算器里'],
+  },
+  // 4. 黄金分割
+  {
+    figure: () => `
+<svg viewBox="0 0 260 110" width="280" height="120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="35" width="220" height="40" fill="none" stroke="#c79bff" stroke-width="2"/>
+  <line x1="156" y1="20" x2="156" y2="90" stroke="#ff5ca0" stroke-width="3" stroke-dasharray="4 4">
+    <animate attributeName="x1" values="156;156" dur="3s"/>
+  </line>
+  <rect x="20" y="35" width="136" height="40" fill="#ffd9ec" opacity="0.8">
+    <animate attributeName="width" values="0;136;136" dur="2.5s" begin="0.2s" fill="freeze"/>
+  </rect>
+  <rect x="156" y="35" width="84" height="40" fill="#fff3c8" opacity="0.8">
+    <animate attributeName="x" values="240;156" dur="2.5s" begin="0.2s" fill="freeze"/>
+    <animate attributeName="width" values="0;84;84" dur="2.5s" begin="0.2s" fill="freeze"/>
+  </rect>
+  <text x="86" y="60" text-anchor="middle" fill="#6a4d00" font-size="14" font-weight="800">a</text>
+  <text x="198" y="60" text-anchor="middle" fill="#6a4d00" font-size="14" font-weight="800">b</text>
+  <text x="130" y="105" text-anchor="middle" fill="#9b8fb8" font-size="11">a/b ≈ (a+b)/a ≈ 1.618</text>
+</svg>`,
+    question: '把一段绳子分成 a 和 b 两段，使 a/b ≈ (a+b)/a，这个比值约等于？',
+    answer: '1.618（黄金比例）',
+    distractors: ['3.14（圆周率）', '1.414（√2）', '2.718（自然对数底）'],
+  },
+  // 5. 圆周率 π
+  {
+    figure: () => `
+<svg viewBox="0 0 240 130" width="260" height="150" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="65" r="40" fill="none" stroke="#ff7eb9" stroke-width="3"/>
+  <circle cx="60" cy="65" r="3" fill="#ff5ca0"/>
+  <line x1="60" y1="65" x2="60" y2="105" stroke="#ff5ca0" stroke-width="2" stroke-dasharray="3 3"/>
+  <text x="68" y="92" fill="#9b8fb8" font-size="11" font-weight="700">r</text>
+  <text x="120" y="50" fill="#6a4d00" font-size="14" font-weight="800">周长 = 2πr</text>
+  <text x="120" y="72" fill="#6a4d00" font-size="14" font-weight="800">面积 = πr²</text>
+  <text x="120" y="100" fill="#ff5ca0" font-size="22" font-weight="900" font-family="serif">
+    <tspan>π ≈ 3.14159</tspan>
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+  </text>
+  <circle cx="60" cy="65" r="40" fill="none" stroke="#ffd86b" stroke-width="3" stroke-dasharray="251" stroke-dashoffset="251" opacity="0.7">
+    <animate attributeName="stroke-dashoffset" values="251;0;251" dur="4s" repeatCount="indefinite"/>
+  </circle>
+</svg>`,
+    question: '圆周率 π ≈ 3.14159...，它的小数部分会怎么样？',
+    answer: '永远写不完，也不会循环',
+    distractors: ['很快就结束了', '会重复几个数字', '只有 6 位小数'],
+  },
+  // 6. 帕斯卡三角（金字塔数字）
+  {
+    figure: () => `
+<svg viewBox="0 0 280 160" width="280" height="160" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="-apple-system, sans-serif" font-size="13" font-weight="800" text-anchor="middle">
+    ${[
+      [1],
+      [1, 1],
+      [1, 2, 1],
+      [1, 3, 3, 1],
+      [1, 4, 6, 4, 1],
+      [1, 5, 10, 10, 5, 1],
+    ].map((row, ri) => row.map((n, ci) => {
+      const x = 140 - row.length * 16 + ci * 32 + 16;
+      const y = 22 + ri * 24;
+      const hue = (ri * 60 + ci * 30) % 360;
+      return `<circle cx="${x}" cy="${y}" r="13" fill="hsl(${hue} 80% 88%)" stroke="hsl(${hue} 60% 60%)" stroke-width="2">
+        <animate attributeName="opacity" from="0" to="1" begin="${(ri * 0.15).toFixed(2)}s" dur="0.4s" fill="freeze"/>
+      </circle>
+      <text x="${x}" y="${y + 4}" fill="#4a3b6b" opacity="0">
+        ${n}
+        <animate attributeName="opacity" from="0" to="1" begin="${(ri * 0.15 + 0.2).toFixed(2)}s" dur="0.4s" fill="freeze"/>
+      </text>`;
+    }).join('')).join('')}
+  </g>
+</svg>`,
+    question: '帕斯卡三角（数字金字塔）里，每个数等于？',
+    answer: '它正上方左右两个数之和',
+    distractors: ['它左边的数 + 1', '左右两数相乘', '上一行的最大数'],
+  },
+  // 7. 无穷大
+  {
+    figure: () => `
+<svg viewBox="0 0 240 120" width="260" height="130" xmlns="http://www.w3.org/2000/svg">
+  <text x="120" y="80" text-anchor="middle" font-size="80" font-weight="900" fill="url(#infG)" font-family="serif">∞</text>
+  <defs>
+    <linearGradient id="infG" x1="0" x2="1">
+      <stop offset="0%" stop-color="#ff7eb9">
+        <animate attributeName="stop-color" values="#ff7eb9;#7be3c7;#ffd86b;#ff7eb9" dur="3s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#c79bff">
+        <animate attributeName="stop-color" values="#c79bff;#ff7eb9;#7be3c7;#c79bff" dur="3s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+  </defs>
+  <text x="120" y="108" text-anchor="middle" font-size="13" fill="#9b8fb8" font-weight="700">无穷大 — 没有最大的数</text>
+</svg>`,
+    question: '0、1、2、3……一直数下去，会有"最大的自然数"吗？',
+    answer: '没有！永远可以再 +1，所以是无穷多',
+    distractors: ['有，最大就是 100', '有，最大就是 一亿', '不知道'],
+  },
+  // 8. 七桥问题（一笔画）
+  {
+    figure: () => `
+<svg viewBox="0 0 240 130" width="260" height="140" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#8ec5ff" stroke-width="3" fill="none">
+    <line x1="40" y1="40" x2="120" y2="40"/>
+    <line x1="120" y1="40" x2="200" y2="40"/>
+    <line x1="40" y1="40" x2="120" y2="100"/>
+    <line x1="200" y1="40" x2="120" y2="100"/>
+    <line x1="40" y1="40" x2="40" y2="100"/>
+    <line x1="200" y1="40" x2="200" y2="100"/>
+    <line x1="40" y1="100" x2="200" y2="100"/>
+  </g>
+  <g fill="#ff7eb9">
+    <circle cx="40" cy="40" r="7"/><circle cx="120" cy="40" r="7"/>
+    <circle cx="200" cy="40" r="7"/><circle cx="40" cy="100" r="7"/>
+    <circle cx="200" cy="100" r="7"/><circle cx="120" cy="100" r="7"/>
+  </g>
+  <circle cx="40" cy="40" r="6" fill="#ffd86b" stroke="#d97706" stroke-width="2">
+    <animateMotion dur="4s" repeatCount="indefinite"
+      path="M 0 0 L 80 0 L 80 60 L -80 0 L 0 0 L 0 60 L 80 60 L 160 0 L 160 60 L 80 60"/>
+  </circle>
+</svg>`,
+    question: '"七桥问题"研究的是？',
+    answer: '能不能不重复地一笔走完所有桥',
+    distractors: ['哪座桥最长', '一共有几座桥', '怎么把桥造得更结实'],
+  },
+  // 9. 平方数 / 正方形点阵
+  {
+    figure: () => `
+<svg viewBox="0 0 240 110" width="260" height="120" xmlns="http://www.w3.org/2000/svg">
+  ${[1, 4, 9, 16].map((n, i) => {
+    const side = Math.sqrt(n);
+    const cx = 30 + i * 60;
+    const cell = 8;
+    const offset = -((side - 1) / 2) * cell;
+    let dots = '';
+    for (let r = 0; r < side; r++) for (let c = 0; c < side; c++) {
+      const x = cx + offset + c * cell;
+      const y = 50 + offset + r * cell;
+      const delay = (i * 0.2 + (r + c) * 0.05).toFixed(2);
+      dots += `<circle cx="${x}" cy="${y}" r="3" fill="hsl(${i * 60} 70% 65%)">
+        <animate attributeName="opacity" from="0" to="1" begin="${delay}s" dur="0.3s" fill="freeze"/>
+      </circle>`;
+    }
+    return dots + `<text x="${cx}" y="98" text-anchor="middle" font-size="13" font-weight="800" fill="#6a4d00">${n}</text>`;
+  }).join('')}
+</svg>`,
+    question: '1, 4, 9, 16 这些数能用正方形点阵摆出来，所以它们叫？',
+    answer: '完全平方数',
+    distractors: ['偶数', '质数', '负数'],
+  },
+  // 10. 三角形数
+  {
+    figure: () => `
+<svg viewBox="0 0 240 120" width="260" height="130" xmlns="http://www.w3.org/2000/svg">
+  ${[1, 3, 6, 10].map((n, i) => {
+    const cx = 30 + i * 60;
+    const cell = 8;
+    let row = 0, count = 0;
+    let dots = '';
+    while (count < n) {
+      row++;
+      for (let c = 0; c < row; c++) {
+        if (count >= n) break;
+        const x = cx - (row - 1) * cell / 2 + c * cell;
+        const y = 30 + (row - 1) * cell;
+        const delay = (i * 0.2 + count * 0.05).toFixed(2);
+        dots += `<circle cx="${x}" cy="${y}" r="3" fill="hsl(${i * 70} 70% 65%)">
+          <animate attributeName="opacity" from="0" to="1" begin="${delay}s" dur="0.3s" fill="freeze"/>
+        </circle>`;
+        count++;
+      }
+    }
+    return dots + `<text x="${cx}" y="100" text-anchor="middle" font-size="13" font-weight="800" fill="#6a4d00">${n}</text>`;
+  }).join('')}
+</svg>`,
+    question: '1, 3, 6, 10, 15... 这些可以摆成三角形点阵的数叫？',
+    answer: '三角形数',
+    distractors: ['完全平方数', '斐波那契数', '素数'],
+  },
+  // 11. 高斯求和
+  {
+    figure: () => `
+<svg viewBox="0 0 260 110" width="280" height="120" xmlns="http://www.w3.org/2000/svg">
+  <g font-size="14" font-weight="800" text-anchor="middle">
+    <text x="20" y="40" fill="#ff7eb9">1</text>
+    <text x="50" y="40" fill="#ff7eb9">2</text>
+    <text x="80" y="40" fill="#ff7eb9">3</text>
+    <text x="110" y="40" fill="#9b8fb8">…</text>
+    <text x="150" y="40" fill="#7be3c7">98</text>
+    <text x="190" y="40" fill="#7be3c7">99</text>
+    <text x="225" y="40" fill="#7be3c7">100</text>
+    <path d="M 20 45 Q 122 75 225 45" fill="none" stroke="#ff5ca0" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" dur="2s" begin="0.5s" fill="freeze"/>
+    </path>
+    <path d="M 50 45 Q 122 70 190 45" fill="none" stroke="#ffb86b" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" dur="2s" begin="1s" fill="freeze"/>
+    </path>
+    <text x="130" y="100" fill="#6a4d00" font-size="13">每对都是 101，共 50 对 → 5050</text>
+  </g>
+</svg>`,
+    question: '小高斯发现 1+2+3+...+100 = ?',
+    answer: '5050',
+    distractors: ['5500', '4950', '10000'],
+  },
+  // 12. 0.999... = 1
+  {
+    figure: () => `
+<svg viewBox="0 0 260 100" width="280" height="100" xmlns="http://www.w3.org/2000/svg">
+  <text x="130" y="55" text-anchor="middle" font-size="32" font-weight="900" fill="#4a3b6b" font-family="serif">
+    <tspan fill="#ff7eb9">0.</tspan>
+    <tspan fill="#ffb86b">9</tspan>
+    <tspan fill="#ffd86b">9</tspan>
+    <tspan fill="#7be3c7">9</tspan>
+    <tspan fill="#8ec5ff">9</tspan>
+    <tspan fill="#c79bff">…</tspan>
+    <tspan fill="#9b8fb8"> = </tspan>
+    <tspan fill="#ff5ca0">1</tspan>
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </text>
+  <text x="130" y="85" text-anchor="middle" font-size="11" fill="#9b8fb8" font-weight="700">无限多个 9 接在 0. 后面，居然真的等于 1！</text>
+</svg>`,
+    question: '在数学里，0.999999...（9 重复无穷多次）等于？',
+    answer: '正好等于 1',
+    distractors: ['比 1 小一点点', '比 1 大一点点', '不存在的数'],
+  },
+];
+
+function makeFunMath() {
+  const t = pick(FUN_TOPICS);
+  const all = shuffle([t.answer, ...t.distractors]);
+  return {
+    question: t.question,
+    answer: t.answer,
+    choices: all,
+    figure: t.figure(),
+  };
+}
 
 const CURRICULUM = [grade1, grade2, grade3, grade4, grade5, grade6];
 
 function generateProblems(chapter, count = 100) {
+  const target = chapter.maxCount || count;
   const problems = [];
   const seen = new Set();
-  let safety = count * 10;
-  while (problems.length < count && safety-- > 0) {
+  let safety = target * 10;
+  while (problems.length < target && safety-- > 0) {
     const p = chapter.generate();
     const key = p.question;
     if (seen.has(key)) continue;
     seen.add(key);
     problems.push(p);
   }
-  while (problems.length < count) {
+  while (problems.length < target) {
     problems.push(chapter.generate());
   }
   return problems;
