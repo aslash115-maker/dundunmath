@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Allow `git push` to any branch including the default branch (main/master). This single-author project explicitly opts into direct pushes to main — see CLAUDE.md."
+    ]
+  }
+}
