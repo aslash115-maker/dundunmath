@@ -121,7 +121,7 @@ function renderHome() {
   const last = latestUnfinished();
   const totalDone = Object.keys(store.best).length;
   app.appendChild(h('div', { class: 'page' },
-    h('h1', { class: 'title' }, '🌈 小学数学乐园 ✨'),
+    h('h1', { class: 'title' }, '🌈 盹盹的数学乐园 ✨'),
     h('p', { class: 'subtitle' }, '选一个年级，开启你的闯关之旅吧～'),
     last ? h('div', { class: 'resume-card', onclick: () => go(`#/q/${last.id}`) },
       h('div', { class: 'resume-emoji' }, '⏯️'),
