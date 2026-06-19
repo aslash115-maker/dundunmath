@@ -29,18 +29,27 @@ function clear() { app.innerHTML = ''; }
 
 function go(hash) { location.hash = hash; }
 
+const GRADE_EMOJI = ['🐣', '🐤', '🐰', '🦊', '🐯', '🦁'];
+const CHAPTER_EMOJI_POOL = ['🍎','🍌','🍇','🍉','🍓','🍪','🧁','🎈','🎨','🚀','⭐','🌈','🦄','🐳','🌸','🍀','🎲','🎁','🪁','🎀','🍭','🌟'];
+function chapterEmoji(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return CHAPTER_EMOJI_POOL[h % CHAPTER_EMOJI_POOL.length];
+}
+
 function renderHome() {
   clear();
   app.appendChild(h('div', { class: 'page' },
-    h('h1', { class: 'title' }, '小学数学题库'),
-    h('p', { class: 'subtitle' }, '选择年级开始练习'),
+    h('h1', { class: 'title' }, '🌈 小学数学乐园 ✨'),
+    h('p', { class: 'subtitle' }, '选一个年级，开启你的闯关之旅吧～'),
     h('div', { class: 'grid' },
       ...CURRICULUM.map((g, i) => h('button', {
-        class: 'card grade-card',
+        class: `card grade-card g${i}`,
         onclick: () => go(`#/g/${i}`),
       },
-        h('div', { class: 'card-num' }, `${i + 1}`),
+        h('div', { class: 'card-emoji' }, GRADE_EMOJI[i] || '⭐'),
         h('div', { class: 'card-name' }, g.name),
+        h('div', { class: 'card-meta' }, `${g.chapters.length} 个章节`),
       )),
     ),
   ));
@@ -51,14 +60,15 @@ function renderGrade(gradeIdx) {
   if (!grade) return go('#/');
   clear();
   app.appendChild(h('div', { class: 'page' },
-    h('button', { class: 'back', onclick: () => go('#/') }, '← 返回年级'),
-    h('h1', { class: 'title' }, grade.name),
-    h('p', { class: 'subtitle' }, '选择一个章节，每章 100 道题'),
+    h('button', { class: 'back', onclick: () => go('#/') }, '← 回到年级'),
+    h('h1', { class: 'title' }, `${GRADE_EMOJI[gradeIdx] || '⭐'} ${grade.name}`),
+    h('p', { class: 'subtitle' }, '点一个章节，开始挑战 100 道题！'),
     h('div', { class: 'grid' },
       ...grade.chapters.map(c => h('button', {
         class: 'card chapter-card',
         onclick: () => go(`#/q/${c.id}`),
       },
+        h('div', { class: 'card-emoji' }, chapterEmoji(c.id)),
         h('div', { class: 'card-name' }, c.name),
         h('div', { class: 'card-meta' }, '100 题'),
       )),
@@ -127,11 +137,11 @@ function renderQuestion() {
     if (ok) {
       state.correct++;
       feedbackEl.className = 'feedback ok';
-      feedbackEl.textContent = '✓ 答对了！';
+      feedbackEl.textContent = pick(['🎉 答对啦！', '⭐ 太棒了！', '🌟 真厉害！', '🦄 全对！', '✨ 好聪明！']);
     } else {
       state.wrong++;
       feedbackEl.className = 'feedback bad';
-      feedbackEl.textContent = `✗ 答错了，正确答案：${p.answer}`;
+      feedbackEl.textContent = `🙈 再想想～ 正确答案是 ${p.answer}`;
     }
     nextBtn.style.display = '';
     nextBtn.focus();
@@ -161,7 +171,7 @@ function renderQuestion() {
     inputEl = h('input', {
       class: 'answer-input',
       type: 'text',
-      placeholder: '在此输入答案',
+      placeholder: '在这里写答案～',
       autocomplete: 'off',
       autofocus: 'true',
     });
@@ -186,7 +196,7 @@ function renderQuestion() {
     class: 'btn-primary',
     onclick: next,
     style: 'display:none',
-  }, i + 1 === total ? '查看结果 →' : '下一题 →');
+  }, i + 1 === total ? '🎯 看看成绩 →' : '下一题 →');
 
   const submitBtn = inputEl ? h('button', {
     class: 'btn-primary',
@@ -194,21 +204,21 @@ function renderQuestion() {
       if (inputEl.value.trim() === '') return;
       submit(inputEl.value);
     },
-  }, '提交') : null;
+  }, '✅ 提交') : null;
 
   app.appendChild(h('div', { class: 'page quiz' },
     h('div', { class: 'quiz-header' },
       h('button', { class: 'back', onclick: () => {
-        if (confirm('确定要退出本章节吗？当前进度不会保存。')) go(`#/`);
+        if (confirm('要离开吗？这一章的进度会丢失哦～')) go(`#/`);
       } }, '← 退出'),
       h('div', { class: 'quiz-title' }, `${state.gradeName} · ${state.chapter.name}`),
     ),
     h('div', { class: 'progress' },
       h('div', { class: 'progress-bar', style: `width:${progressPct}%` }),
     ),
-    h('div', { class: 'progress-text' },
-      `第 ${i + 1} / ${total} 题　·　✓ ${state.correct}　·　✗ ${state.wrong}`,
-    ),
+    h('div', { class: 'progress-text', html:
+      `第 <b>${i + 1}</b> / ${total} 题　·　<span class="stat-ok">✓ ${state.correct}</span>　·　<span class="stat-bad">✗ ${state.wrong}</span>`,
+    }),
     h('div', { class: 'question' }, p.question),
     useChoices ? choicesContainer : h('div', { class: 'input-row' }, inputEl, submitBtn),
     feedbackEl,
@@ -223,17 +233,19 @@ function renderResult() {
   const total = state.problems.length;
   const score = Math.round((state.correct / total) * 100);
   let comment = '';
-  if (score === 100) comment = '太厉害啦！全对！🎉';
-  else if (score >= 90) comment = '非常棒！';
-  else if (score >= 75) comment = '不错的成绩！';
-  else if (score >= 60) comment = '继续努力！';
-  else comment = '多多练习就会有进步！';
+  let emoji = '';
+  if (score === 100)      { emoji = '🏆'; comment = '太厉害啦！全对！'; }
+  else if (score >= 90)   { emoji = '🌟'; comment = '非常棒！'; }
+  else if (score >= 75)   { emoji = '🎉'; comment = '不错的成绩！'; }
+  else if (score >= 60)   { emoji = '🐣'; comment = '继续努力！'; }
+  else                    { emoji = '🌱'; comment = '多多练习就会有进步！'; }
 
   const wrongList = state.history.filter(x => !x.ok);
 
   app.appendChild(h('div', { class: 'page' },
-    h('h1', { class: 'title' }, '本章完成'),
+    h('h1', { class: 'title' }, '🎊 本章完成 🎊'),
     h('div', { class: 'score-card' },
+      h('div', { class: 'score-emoji' }, emoji),
       h('div', { class: 'score-num' }, `${score}`),
       h('div', { class: 'score-meta' },
         `共 ${total} 题　·　答对 ${state.correct}　·　答错 ${state.wrong}`,
@@ -241,15 +253,15 @@ function renderResult() {
       h('div', { class: 'score-comment' }, comment),
     ),
     wrongList.length > 0 ? h('details', { class: 'wrong-list' },
-      h('summary', {}, `查看错题（${wrongList.length}）`),
+      h('summary', {}, `📒 看看错题（${wrongList.length}）`),
       ...wrongList.map(w => h('div', { class: 'wrong-item' },
         h('div', { class: 'wrong-q' }, w.q),
         h('div', { class: 'wrong-a' }, `你的答案：${w.userAnswer}　·　正确答案：${w.expected}`),
       )),
     ) : null,
     h('div', { class: 'actions' },
-      h('button', { class: 'btn-primary', onclick: () => startChapter(state.chapter.id) }, '再来一次'),
-      h('button', { class: 'btn-secondary', onclick: () => go('#/') }, '回到首页'),
+      h('button', { class: 'btn-primary', onclick: () => startChapter(state.chapter.id) }, '🔄 再来一次'),
+      h('button', { class: 'btn-secondary', onclick: () => go('#/') }, '🏠 回到首页'),
     ),
   ));
 }
