@@ -73,6 +73,27 @@ function h(tag, props = {}, ...children) {
 function clear() { app.innerHTML = ''; }
 function go(hash) { location.hash = hash; }
 
+const SPARK_EMOJIS = ['⭐', '🌟', '✨', '🎉', '🎊', '💖', '🌈', '🦄'];
+function celebrate() {
+  const layer = h('div', { class: 'celebrate' });
+  const count = 10;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    const dist = 140 + Math.random() * 100;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const rot = (Math.random() * 720 - 360) + 'deg';
+    const e = pick(SPARK_EMOJIS);
+    const sp = h('div', { class: 'spark' }, e);
+    sp.style.setProperty('--dx', dx + 'px');
+    sp.style.setProperty('--dy', dy + 'px');
+    sp.style.setProperty('--rot', rot);
+    layer.appendChild(sp);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 800);
+}
+
 const GRADE_EMOJI = ['🐣', '🐤', '🐰', '🦊', '🐯', '🦁'];
 const CHAPTER_EMOJI_POOL = ['🍎','🍌','🍇','🍉','🍓','🍪','🧁','🎈','🎨','🚀','⭐','🌈','🦄','🐳','🌸','🍀','🎲','🎁','🪁','🎀','🍭','🌟'];
 function chapterEmoji(id) {
@@ -256,13 +277,12 @@ function renderQuestion() {
       state.correct++;
       feedbackEl.className = 'feedback ok';
       feedbackEl.textContent = pick(['🎉 答对啦！', '⭐ 太棒了！', '🌟 真厉害！', '🦄 全对！', '✨ 好聪明！']);
+      celebrate();
     } else {
       state.wrong++;
       feedbackEl.className = 'feedback bad';
       feedbackEl.textContent = `🙈 再想想～ 正确答案是 ${p.answer}`;
     }
-    nextBtn.style.display = '';
-    nextBtn.focus();
     if (inputEl && inputEl.tagName === 'INPUT') inputEl.disabled = true;
     if (choicesContainer) {
       [...choicesContainer.children].forEach(btn => {
@@ -271,6 +291,17 @@ function renderQuestion() {
         if (checkAnswer(v, p.answer)) btn.classList.add('choice-correct');
         else if (v === String(userAnswer)) btn.classList.add('choice-wrong');
       });
+    }
+    if (ok) {
+      // 答对：短暂展示后自动下一题
+      nextBtn.style.display = 'none';
+      setTimeout(() => {
+        if (state.index === i) next();  // 防止用户已手动跳走
+      }, 700);
+    } else {
+      // 答错：显示「下一题」按钮，由用户主动确认
+      nextBtn.style.display = '';
+      nextBtn.focus();
     }
   }
 

@@ -328,6 +328,28 @@ body::after  { content: '🎈'; bottom: 12%; right: 8%; animation-delay: 2s; }
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* 答对时屏幕中央的烟花特效 */
+.celebrate {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+.celebrate .spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 40px;
+  animation: spark 0.7s ease-out forwards;
+  filter: drop-shadow(0 4px 8px rgba(255, 200, 50, 0.5));
+}
+@keyframes spark {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  20%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); opacity: 0; }
+}
+
 .btn-primary, .btn-secondary {
   display: block;
   width: 100%;
