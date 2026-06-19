@@ -527,3 +527,42 @@ body::after  { content: '🎈'; bottom: 12%; right: 8%; animation-delay: 2s; }
   padding: 4px 8px;
 }
 .link-btn:hover { color: var(--bad); }
+.link-btn.danger { color: var(--bad); }
+.link-btn.danger:hover { color: #c43a3a; }
+
+.home-footer {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-stat { color: var(--muted); }
+.footer-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* 章节卡上的「清空这一章进度」小按钮 */
+.clear-x {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #ffc6c6;
+  color: #d97070;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(217, 112, 112, 0.25);
+  transition: transform 0.12s, background 0.12s;
+}
+.clear-x:hover {
+  background: #ffe1e1;
+  transform: scale(1.1);
+  color: var(--bad);
+}

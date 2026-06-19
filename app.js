@@ -120,6 +120,12 @@ function renderHome() {
   clear();
   const last = latestUnfinished();
   const totalDone = Object.keys(store.best).length;
+  const totalProgress = Object.keys(store.progress).filter(id => {
+    const p = store.progress[id];
+    return p && p.problems && p.index < p.problems.length;
+  }).length;
+  const hasAnyData = totalDone > 0 || totalProgress > 0;
+
   app.appendChild(h('div', { class: 'page' },
     h('h1', { class: 'title' }, '🌈 盹盹的数学乐园 ✨'),
     h('p', { class: 'subtitle' }, '选一个年级，开启你的闯关之旅吧～'),
@@ -143,14 +149,33 @@ function renderHome() {
         h('div', { class: 'card-meta' }, `${g.chapters.length} 个章节`),
       )),
     ),
-    totalDone > 0 ? h('div', { class: 'home-footer' },
-      h('span', {}, `🏅 已挑战 ${totalDone} 个章节`),
-      h('button', { class: 'link-btn', onclick: () => {
-        if (confirm('确定要清空所有进度和成绩记录吗？')) {
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
-        }
-      } }, '清空记录'),
+    hasAnyData ? h('div', { class: 'home-footer' },
+      h('span', { class: 'footer-stat' },
+        totalProgress > 0 ? `🔖 ${totalProgress} 个进行中` : null,
+        totalProgress > 0 && totalDone > 0 ? '　·　' : null,
+        totalDone > 0 ? `🏅 ${totalDone} 个已完成` : null,
+      ),
+      h('div', { class: 'footer-actions' },
+        totalProgress > 0 ? h('button', {
+          class: 'link-btn',
+          onclick: () => {
+            if (confirm(`确定要清空 ${totalProgress} 个进行中章节的进度吗？\n（最高分记录会保留）`)) {
+              store.progress = {};
+              saveStore(store);
+              location.reload();
+            }
+          },
+        }, '🗑️ 清空进度') : null,
+        h('button', {
+          class: 'link-btn danger',
+          onclick: () => {
+            if (confirm('⚠️ 确定要清空所有进度和最高分记录吗？\n这个操作不能撤销。')) {
+              localStorage.removeItem(STORAGE_KEY);
+              location.reload();
+            }
+          },
+        }, '⚠️ 清空全部记录'),
+      ),
     ) : null,
   ));
 }
@@ -171,15 +196,27 @@ function renderGrade(gradeIdx) {
         const meta = inProgress
           ? `▶ 已答 ${prog.index}/${prog.problems.length}`
           : '100 题';
-        return h('button', {
+        const card = h('button', {
           class: 'card chapter-card' + (inProgress ? ' has-progress' : ''),
           onclick: () => go(`#/q/${c.id}`),
         },
           best != null ? h('div', { class: 'best-badge' }, `🏅 ${best}分`) : null,
+          inProgress ? h('div', {
+            class: 'clear-x',
+            title: '清空这一章进度',
+            onclick: (e) => {
+              e.stopPropagation();
+              if (confirm(`清空「${c.name}」的进度（已答 ${prog.index} 题）？\n下次会重新随机出题。`)) {
+                clearProgress(c.id);
+                renderGrade(gradeIdx);
+              }
+            },
+          }, '✕') : null,
           h('div', { class: 'card-emoji' }, chapterEmoji(c.id)),
           h('div', { class: 'card-name' }, c.name),
           h('div', { class: 'card-meta' }, meta),
         );
+        return card;
       }),
     ),
   ));
