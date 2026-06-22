@@ -13,6 +13,7 @@ window.IMAGE_MANIFEST = [
   "collage-counting-fiesta.png",
   "collage-digit-garden.png",
   "collage-equation-street.png",
+  "collage-everything.png",
   "collage-fraction-pies.png",
   "collage-geometry-rainbow.png",
   "collage-infinity-playground.png",
