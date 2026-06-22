@@ -121,6 +121,8 @@ window.IMAGE_MANIFEST = [
   "collage-number-line.png",
   "collage-operator-parade.png",
   "collage-pi-day.png",
+  "collage-pi-digits-ring1.png",
+  "collage-pi-digits-ring2.png",
   "collage-pythagoras.png",
   "collage-shape-party.png",
   "collage-times-table.png",
