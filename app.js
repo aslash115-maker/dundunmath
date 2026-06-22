@@ -139,6 +139,16 @@ function renderHome() {
       ),
       h('div', { class: 'resume-arrow' }, '→'),
     ) : null,
+    h('div', { class: 'gallery-entry', onclick: () => go('#/gallery') },
+      h('div', { class: 'gallery-entry-emoji' }, '🖼️'),
+      h('div', { class: 'gallery-entry-text' },
+        h('div', { class: 'gallery-entry-title' }, '图片挑选'),
+        h('div', { class: 'gallery-entry-sub' },
+          `数学符号 · 趣味公式 · 几何图形　共 ${(window.IMAGE_MANIFEST || []).length} 张`,
+        ),
+      ),
+      h('div', { class: 'gallery-entry-arrow' }, '→'),
+    ),
     h('div', { class: 'grid' },
       ...CURRICULUM.map((g, i) => h('button', {
         class: `card grade-card g${i}`,
@@ -469,10 +479,68 @@ function renderResult() {
   ));
 }
 
+function renderGallery(page) {
+  const list = window.IMAGE_MANIFEST || [];
+  const perPage = 8;
+  const total = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const p = Math.min(Math.max(1, page | 0 || 1), totalPages);
+  const start = (p - 1) * perPage;
+  const slice = list.slice(start, start + perPage);
+
+  clear();
+
+  function prettyName(file) {
+    return file.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  }
+
+  const overlay = h('div', { class: 'img-overlay', onclick: () => overlay.remove() });
+  function openOverlay(file) {
+    overlay.innerHTML = '';
+    overlay.appendChild(h('img', { src: `img/${file}`, alt: file }));
+    overlay.appendChild(h('div', { class: 'img-overlay-name' }, prettyName(file)));
+    document.body.appendChild(overlay);
+  }
+
+  const grid = h('div', { class: 'gallery-grid' },
+    ...slice.map((file) => h('div', {
+      class: 'gallery-card',
+      onclick: () => openOverlay(file),
+    },
+      h('div', { class: 'gallery-thumb' },
+        h('img', { src: `img/${file}`, alt: file, loading: 'lazy' }),
+      ),
+      h('div', { class: 'gallery-name' }, prettyName(file)),
+    )),
+  );
+
+  function goPage(n) { go(`#/gallery/${n}`); }
+
+  const pager = h('div', { class: 'pager' },
+    h('button', { class: 'pager-btn', disabled: p === 1 ? 'true' : null, onclick: () => goPage(1) }, '« 首页'),
+    h('button', { class: 'pager-btn', disabled: p === 1 ? 'true' : null, onclick: () => goPage(p - 1) }, '‹ 上一页'),
+    h('span', { class: 'pager-info' }, `第 ${p} / ${totalPages} 页　·　共 ${total} 张`),
+    h('button', { class: 'pager-btn', disabled: p === totalPages ? 'true' : null, onclick: () => goPage(p + 1) }, '下一页 ›'),
+    h('button', { class: 'pager-btn', disabled: p === totalPages ? 'true' : null, onclick: () => goPage(totalPages) }, '末页 »'),
+  );
+
+  app.appendChild(h('div', { class: 'page' },
+    h('button', { class: 'back', onclick: () => go('#/') }, '← 回到首页'),
+    h('h1', { class: 'title' }, '🖼️ 图片挑选 ✨'),
+    h('p', { class: 'subtitle' }, '点一张大图看清楚～'),
+    total === 0
+      ? h('div', { class: 'empty' }, '还没有图片，请先生成图片再来逛逛。')
+      : grid,
+    total > 0 ? pager : null,
+  ));
+}
+
 function route() {
   const hash = location.hash || '#/';
   const m1 = hash.match(/^#\/g\/(\d+)$/);
   const m2 = hash.match(/^#\/q\/(.+)$/);
+  const mg = hash.match(/^#\/gallery(?:\/(\d+))?$/);
+  if (mg) return renderGallery(mg[1] ? Number(mg[1]) : 1);
   if (m1) return renderGrade(Number(m1[1]));
   if (m2) return startChapter(m2[1]);
   return renderHome();
